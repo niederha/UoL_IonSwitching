@@ -2,23 +2,33 @@ import pandas as pd
 from os import path
 import gc
 import matplotlib.pyplot as plt
-
+import warnings
 
 class DataContainer:
 
     _expectedExtension = '.csv'
-    _df = []
-    _fileName = ''
-    _dataIsLoaded = False
-    _dataStat = {'mean': float('nan'),
-                 'histogram': {},
-                 'nbData': float('nan'),
-                 'totalTime': float('nan'),
-                 'min': float('nan'),
-                 'max': float('nan')}
-    _dataStatIsLoaded = False
 
-    def __init__(self, fileName, filePath=''):
+    def __init__(self, fileName, filePath='', status="train"):
+        # Initialise data
+        self._df = []
+        self._fileName = ''
+        self._dataIsLoaded = False
+        self._dataStat = {'mean': float('nan'),
+                          'histogram': {},
+                          'nbData': float('nan'),
+                          'totalTime': float('nan'),
+                          'min': float('nan'),
+                          'max': float('nan')}
+        self._dataStatIsLoaded = False
+
+        # Check status given by user
+        if not (status == "train" or status == "test"):
+            warnings.warn('Unknown status. Must be train or test. Back to default: train')
+            self._status = 'train'
+        else:
+            self._status = status
+
+        # Load data
         self.loadData(fileName, filePath)
 
     def loadData(self, fileName, filePath):
@@ -98,23 +108,35 @@ class DataContainer:
     # region private functions
     def _computeDataStat(self):
         if not self._dataStatIsLoaded:
+            if self._status == 'train':
+                self._dataStat['histogram'] = self._computeHistogram(self._df)
+                if len(self._dataStat['histogram']) != 0:
+                    self._dataStat['min'] = min(list(self._dataStat['histogram'].keys()))
+                    self._dataStat['max'] = max(list(self._dataStat['histogram'].keys()))
+
             self._dataStat['mean'] = self._computeSignalMean(self._df)
-            self._dataStat['histogram'] = self._computeHistogram(self._df)
             self._dataStat['nbData'] = self._computeNbRow(self._df)
             self._dataStat['totalTime'] = self._computeTotalTime(self._df)
-            self._dataStat['min'] = min(list(self._dataStat['histogram'].keys()))
-            self._dataStat['max'] = max(list(self._dataStat['histogram'].keys()))
-
     # endregion
 
     # region static methods
     @staticmethod
     def _computeSignalMean(df):
-        return df.signal.mean()
+        if 'signal' not in df:
+            warnings.warn('Signal is not part of the data frame')
+            return float('nan')
+        else:
+            return df.signal.mean()
 
     @staticmethod
     def _computeHistogram(df):
-        return df.open_channels.value_counts().to_dict()
+        if 'open_channels' not in df:
+            warnings.warn('Open_channels is not part of the data frame')
+            return {}
+        else:
+            histogram = df.open_channels.value_counts().to_dict()
+            histogram = dict(sorted(histogram.items()))  # Sorting dictionary
+            return histogram
 
     @staticmethod
     def _computeNbRow(df):
@@ -122,5 +144,9 @@ class DataContainer:
 
     @staticmethod
     def _computeTotalTime(df):
-        return max(df.time)
+        if 'time' not in df:
+            warnings.warn('Time is not part of the data frame')
+            return float('nan')
+        else:
+            return max(df.time)
     # endregion
