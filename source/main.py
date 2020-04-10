@@ -4,7 +4,11 @@ import preprocessing as pp
 import metadata as md
 
 if __name__ == '__main__':
+
+    # Load
     trainingData = pp.DataContainer(md.trainingFileName, md.dataPath)
+
+    # Analysis
     trainingData.plotStats()
     dataStat = trainingData.get_dataStat()
     print("\n=========== DATA STATISTICS ===========\n"
@@ -14,3 +18,9 @@ if __name__ == '__main__':
           "Total time:           ", dataStat['totalTime'], "[s]\n"
           "Number of data points:", dataStat['nbData'], "\n"
           "=======================================\n")
+
+    # Unwrap data
+    trainingData.unwrapData()
+
+    # Demean wraps
+    trainingData.demeanFrames()

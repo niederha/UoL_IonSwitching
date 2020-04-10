@@ -4,6 +4,8 @@ import gc
 import matplotlib.pyplot as plt
 import warnings
 
+import metadata as md
+
 class DataContainer:
 
     _expectedExtension = '.csv'
@@ -30,6 +32,10 @@ class DataContainer:
 
         # Load data
         self.loadData(fileName, filePath)
+
+        # Split data
+        self._unwrappedData = []
+        self.unwrapData()
 
     def loadData(self, fileName, filePath):
 
@@ -67,6 +73,9 @@ class DataContainer:
                      'max': float('nan')}
         self._dataStatIsLoaded = False
 
+        # clear unwrapped data
+        self._unwrappedData = []
+
     def plotStats(self):
         if not self._dataStatIsLoaded:
             self._computeDataStat()
@@ -79,6 +88,35 @@ class DataContainer:
         plt.xlabel('Number of open channels')
         plt.ylabel('Number of occurrences')
         plt.show()
+
+    def unwrapData(self):
+        self._computeDataStat()
+        totalTime = self._dataStat['totalTime']
+        nbFrames = totalTime/md.continuousSampleTime
+        if not nbFrames.is_integer():
+            warnings.warn("Error in the script. nbFrames was supposed to be an integer but is: ", nbFrames)
+        nbFrames = int(nbFrames)
+
+        for i in range(nbFrames):
+            minIndex = i * md.nbContinuousSamples
+            maxIndex = (i+1) * md.nbContinuousSamples - 1
+            self._unwrappedData = self._unwrappedData + [self._df[minIndex:maxIndex]]
+
+    def demeanFrames(self):
+
+        if len(self._unwrappedData) == 0:
+            self.unwrapData()
+
+        # Prepare for demean
+        colNames = self._df.columns.to_list()
+
+        for i, df in enumerate(self._unwrappedData):
+            means = df.mean()
+            for name in colNames:
+                if name != 'signal':
+                    means.loc[name] = 0
+            self._unwrappedData[i] = df.sub(means)
+
 
     # region getters
     def get_expectedExtension(self):
@@ -102,6 +140,9 @@ class DataContainer:
 
     def get_dataStatIsLoaded(self):
         return self._dataStatIsLoaded
+
+    def get_unwrappedData(self):
+        return self._unwrappedData
 
     # endregion
 
