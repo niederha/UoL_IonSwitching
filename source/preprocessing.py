@@ -3,6 +3,7 @@ from os import path
 import gc
 import matplotlib.pyplot as plt
 import warnings
+from math import sqrt
 
 import metadata as md
 
@@ -116,6 +117,23 @@ class DataContainer:
                 if name != 'signal':
                     means.loc[name] = 0
             self._unwrappedData[i] = df.sub(means)
+
+    def devariateFrames(self):
+
+        if len(self._unwrappedData) == 0:
+            self.unwrapData()
+
+        # Prepare for demean
+        colNames = self._df.columns.to_list()
+
+        for i, df in enumerate(self._unwrappedData):
+            variance = df.var()
+            for name in colNames:
+                if name != 'signal':
+                    variance.loc[name] = 1
+                else:
+                    variance.loc[name] = sqrt(variance.loc[name])
+            self._unwrappedData[i] = df.div(variance)
 
 
     # region getters

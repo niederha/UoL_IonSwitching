@@ -22,5 +22,8 @@ if __name__ == '__main__':
     # Unwrap data
     trainingData.unwrapData()
 
-    # Demean wraps
+    # Demean unwrapped data
     trainingData.demeanFrames()
+
+    # Devrariate unwrapped data
+    trainingData.devariateFrames()
