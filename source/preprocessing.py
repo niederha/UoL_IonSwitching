@@ -2,6 +2,7 @@ import pandas as pd
 from os import path
 import gc
 import matplotlib.pyplot as plt
+from matplotlib import rcParams
 import warnings
 from math import sqrt
 
@@ -12,6 +13,10 @@ class DataContainer:
     _expectedExtension = '.csv'
 
     def __init__(self, fileName, filePath='', status="train"):
+
+        # Setup matplot lib for displaying data
+        rcParams['agg.path.chunksize'] = 10000
+
         # Initialise data
         self._df = []
         self._fileName = ''
@@ -90,6 +95,21 @@ class DataContainer:
         plt.ylabel('Number of occurrences')
         plt.show()
 
+    def plotDataByChannels(self, name=""):
+
+        data = []
+        xlabels = self._df.open_channels.unique()
+        xlabels.sort()
+
+        for val in xlabels:
+            data += [self._df.signal[self._df.open_channels.eq(val)].to_list()]
+
+        plt.boxplot(data)
+        plt.xlabel('Number of open channels')
+        plt.ylabel('Signal level')
+        plt.title(name)
+        plt.show()
+
     def unwrapData(self):
         self._computeDataStat()
         totalTime = self._dataStat['totalTime']
@@ -135,6 +155,12 @@ class DataContainer:
                     variance.loc[name] = sqrt(variance.loc[name])
             self._unwrappedData[i] = df.div(variance)
 
+    def wrapData(self):
+        if len(self._unwrappedData) == 0:
+            warnings.warn("Data have to be unwrapped before aglomeration")
+        else:
+            self._df = pd.DataFrame()
+            self._df = self._df.append(self._unwrappedData)
 
     # region getters
     def get_expectedExtension(self):
