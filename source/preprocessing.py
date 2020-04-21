@@ -111,6 +111,7 @@ class DataContainer:
         plt.show()
 
     def unwrapData(self):
+        self._unwrappedData = []
         self._computeDataStat()
         totalTime = self._dataStat['totalTime']
         nbFrames = totalTime/md.continuousSampleTime
@@ -120,7 +121,7 @@ class DataContainer:
 
         for i in range(nbFrames):
             minIndex = i * md.nbContinuousSamples
-            maxIndex = (i+1) * md.nbContinuousSamples - 1
+            maxIndex = (i+1) * md.nbContinuousSamples
             self._unwrappedData = self._unwrappedData + [self._df[minIndex:maxIndex]]
 
     def demeanFrames(self):
