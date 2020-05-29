@@ -1,0 +1,1 @@
+This project was a quick try to get a hang of Kaggle competitions. There is nothing out of the ordinary but a very simple non-linear regression method in it (even calling it that is a bit of a stretch)
